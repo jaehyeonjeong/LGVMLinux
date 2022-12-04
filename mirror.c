@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <limits.h>
+#include <unistd.h>
 #include "bmpHeader.h"
 
 #define BYTE unsigned char
@@ -12,6 +14,9 @@
 #define BASE 15
 
 #define widthbytes(bits) (((bits)+31)/32*4)
+
+#define LIMIT_U #define LIMIT_U
+
 
 void main(int argc, char** argv)
 {

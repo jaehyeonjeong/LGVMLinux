@@ -2,29 +2,31 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include "bmpHeader.h"
+
 
 #define BYTE	unsigned char
 #ifndef M_PI
 #define M_PI	3.141592654
 #endif
 #define BASE	15
-
+/*
 typedef struct tagRGBQUAD {
   BYTE    rgbBlue; 
   BYTE    rgbGreen; 
   BYTE    rgbRed; 
   BYTE    rgbReserved; 
 } RGBQUAD; 
-
+*/
 #define widthbytes(bits)   (((bits)+31)/32*4)
 
 void main(int argc, char** argv)
 {
 	FILE *fp;
 	RGBQUAD palrgb[256];
-
-	unsigned short int type;  
-	unsigned int file_size;   
+	BITMAPFILEHEADER bmpHeader;
+	BITMAPINFOHEADER bmpInfoHeader;
+	/*unsigned int file_size;   
 	unsigned short int reserved1; 
 	unsigned short int reserved2; 
 	unsigned int offset;   
@@ -36,9 +38,12 @@ void main(int argc, char** argv)
 	unsigned int imagesize;   
 	int hresolution,vresolution; 
 	unsigned int ncolors;   
-	unsigned int importantcolors; 
+	unsigned int importantcolors;*/ 
 	char input[128], output[128];
- 
+
+
+
+
 	int i, j, size, index;
 
 	unsigned char *inimg;
@@ -51,7 +56,7 @@ void main(int argc, char** argv)
 		fprintf(stderr, "Error : Failed to open file...\n");
 		exit(EXIT_FAILURE);
 	}
-
+/*
 	fread(&type, sizeof(unsigned short int), 1, fp);
 	fread(&file_size, sizeof(unsigned int), 1, fp);
 	fread(&reserved1, sizeof(unsigned short int), 1, fp);
@@ -68,19 +73,26 @@ void main(int argc, char** argv)
 	fread(&vresolution, sizeof(int), 1, fp);
 	fread(&ncolors, sizeof(unsigned int), 1, fp);
 	fread(&importantcolors, sizeof(unsigned int), 1, fp);
-
+*/
+fread(&bmpHeader, sizeof(BITMAPFILEHEADER), 1, fp);
+ fread(&bmpInfoHeader, sizeof(BITMAPINFOHEADER), 1, fp);
 	//size = widthbytes(bits * width);
 
-	if(!imagesize) imagesize = height * size;
-	inimg = (BYTE*)malloc(sizeof(BYTE)*imagesize);
-	outimg = (BYTE*)malloc(sizeof(BYTE)*imagesize);
-	fread(inimg, sizeof(BYTE), imagesize, fp);
+	//if(!imagesize) imagesize = height * size;
+	//inimg = (BYTE*)malloc(sizeof(BYTE)*imagesize);
+	//outimg = (BYTE*)malloc(sizeof(BYTE)*imagesize);
+	//fread(inimg, sizeof(BYTE), imagesize, fp);
 	fclose(fp);
 
+printf("%dx%d\n",bmpInfoHeader.biWidth,bmpInfoHeader.biHeight);
+	//printf("size : %d\n",size);
+//printf("imagesize : %d\n",imagesize); 
+
+/*
 	int elemSize = bits / 8;
 	size = width * elemSize;
 	imagesize = size * height;
-
+	
 	for(i = 0; i < height; i++) {
 		for(j = 0 ; j < size; j+=elemSize) {
 			
@@ -127,4 +139,6 @@ void main(int argc, char** argv)
 	free(outimg);
 
 	fclose(fp);
+
+*/
 }
