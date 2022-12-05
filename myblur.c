@@ -17,7 +17,7 @@ int main(int argc, char** argv)
     BITMAPFILEHEADER bmpHeader;             /* BMP FILE INFO */
     BITMAPINFOHEADER bmpInfoHeader;     /* BMP IMAGE INFO */
     RGBQUAD *palrgb;
-    ubyte *inimg, *outimg, *padding;
+    ubyte *inimg, *outimg;// *padding;
     int x, y, z, imageSize;
 
 	//Bitmap exe file
@@ -101,7 +101,7 @@ int main(int argc, char** argv)
     
     free(inimg); 
     free(outimg);
-	free(padding);
+//	free(padding);
     
     return 0;
 }
