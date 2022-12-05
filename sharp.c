@@ -20,7 +20,6 @@ int main(int argc, char** argv)
     ubyte *inimg, *outimg, *padding;
     int x, y, z, imageSize;
 
-	//Bitmap exe file
     if(argc != 3) {
         fprintf(stderr, "usage : %s input.bmp output.bmp\n", argv[0]);
         return -1;
@@ -59,14 +58,14 @@ int main(int argc, char** argv)
     inimg = (ubyte*)malloc(sizeof(ubyte)*imageSize+padding_size); 
     outimg = (ubyte*)malloc(sizeof(ubyte)*imageSize);
 	padding = (ubyte*)malloc(sizeof(ubyte)*imageSize+padding_size);
-    fread(inimg, sizeof(ubyte), imageSize+padding_size, fp); 
+    fread(inimg, sizeof(ubyte), imageSize, fp); 
     
     fclose(fp);
 
     // define the kernel
-    float kernel[3][3] = { {1/9.0, 1/9.0, 1/9.0},
-                           {1/9.0, 1/9.0, 1/9.0},
-                           {1/9.0, 1/9.0, 1/9.0} };
+    float kernel[3][3] = { {-1, -1, -1},
+                           {-1, 9, -1},
+                           {-1, -1, -1} };
     memset(outimg, 0, sizeof(ubyte)*imageSize);
     for(y = 0; y < bmpInfoHeader.biHeight; y++) { 
         for(x = 0; x < (bmpInfoHeader.biWidth) * elemSize; x+=elemSize) {
