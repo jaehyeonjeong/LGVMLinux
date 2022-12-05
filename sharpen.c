@@ -45,7 +45,7 @@ int main(int argc, char** argv)
     }
     
     int elemSize = bmpInfoHeader.biBitCount/8;
-    int size = bmpInfoHeader.biWidth*elemSize;
+    int size = bmpInfoHeader.biWidth*elemSize; //strider 1 line
     imageSize = size * bmpInfoHeader.biHeight; 
 
     /* 이미지의 해상도(넓이 × 깊이) */
@@ -73,24 +73,24 @@ int main(int argc, char** argv)
             }
         }
     }
-
+    //2 height lines
     for(y = 0; y < bmpInfoHeader.biHeight; y++) { 
         for(z = 0; z < elemSize; z++) {
             padimg[0+(y+1)*padSize+z]=inimg[0+y*size+z];
             padimg[padSize-elemSize+(y+1)*padSize+z]=inimg[size-elemSize+y*size+z];
         }
     }
-
+    //2 width lines
     for(x = 0; x < bmpInfoHeader.biWidth*elemSize; x++) { 
         padimg[elemSize+x]=inimg[x];
         padimg[elemSize+x+(bmpInfoHeader.biHeight)*padSize]=inimg[x+(bmpInfoHeader.biHeight-1)*size];
     }
-
+    //4 edge points
     for(z = 0; z < elemSize; z++) {
        padimg[z]=inimg[z];
        padimg[padSize-elemSize+z]=inimg[size-elemSize+z];
-       padimg[(bmpInfoHeader.biHeight+2)*padSize+z]=inimg[(bmpInfoHeader.biHeight-1)*size+z];
-       padimg[(bmpInfoHeader.biHeight+2)*padSize+padSize-elemSize+z]=inimg[(bmpInfoHeader.biHeight-1)*size+size-elemSize+z];
+       padimg[(bmpInfoHeader.biHeight+1)*padSize+z]=inimg[(bmpInfoHeader.biHeight-1)*size+z];
+       padimg[(bmpInfoHeader.biHeight+1)*padSize+padSize-elemSize+z]=inimg[(bmpInfoHeader.biHeight-1)*size+size-elemSize+z];
     }
 
     // define the kernel

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "bmpHeader3.h"
+#include "bmpHeader.h"
 
 #define BYTE	unsigned char
 #define BASE    16
@@ -18,7 +18,7 @@ int main(int argc, char** argv)
 
 	char input[128], output[128];
 
-	float r, g, b, gray;
+	float r, g, b, gray1, gray2;
 	unsigned int imagesize;   
 
 	int i, j, size, index;
@@ -48,7 +48,8 @@ int main(int argc, char** argv)
 	fclose(fp);
  
 printf("Image width : %d, height : %d(%d)\n", bmpInfoHeader.biWidth, bmpInfoHeader.biHeight, bmpInfoHeader.biWidth*bmpInfoHeader.biHeight);
-	
+
+    int value;
 	for(i = 0; i < 256; i++) histogram[i] = 0;
  
 	for(i = 0; i < bmpInfoHeader.biHeight; i++) {
@@ -58,20 +59,22 @@ printf("Image width : %d, height : %d(%d)\n", bmpInfoHeader.biWidth, bmpInfoHead
 			g = (float)inimg[index+3*j+1];
 			b = (float)inimg[index+3*j+0];
 			//그레이 스케일로 변환하는 공식
-			gray = (r*0.3F)+(g*0.65F)+(b*0.25F);
-			histogram[(unsigned char)(gray)] += 1;
-			outimg[index+3*j] = outimg[index+3*j+1] = outimg[index+3*j+2] = gray;
+			gray1 = (r*0.3F)+(g*0.59F)+(b*0.11F);
+
+
+            r = (float)inimg[index+3*j+2-3];
+            g = (float)inimg[index+3*j+1-3];
+            b = (float)inimg[index+3*j+0-3];
+            gray2 = (r*0.3F)+(g*0.59F)+(b*0.11F);
+
+            value = (int)(gray2 - gray1);
+			outimg[index+3*j] = (value > BASE)?255:0;
+            outimg[index+3*j+1] = (value > BASE)?255:0;
+            outimg[index+3*j+2] = (value > BASE)?255:0;
+
 		};
 	};
 
-    for(i = 0; i < 256; i++) {
-		printf("%-3d  ", i); //-는 뒤에서 나오는수
-		if(!(int)(histogram[i]/bmpInfoHeader.biHeight) && (histogram[i]%bmpInfoHeader.biHeight))
-		   printf("*");
-		else for(j = 0; j < (int)(histogram[i]/bmpInfoHeader.biHeight); j++)
-		   printf("*");
-		printf("  %d\n", histogram[i]);
-    };
 	
 	bmpFileHeader.bfOffBits += 256*sizeof(RGBQUAD); 
 
