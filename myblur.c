@@ -58,7 +58,7 @@ int main(int argc, char** argv)
 
     inimg = (ubyte*)malloc(sizeof(ubyte)*imageSize+padding_size); 
     outimg = (ubyte*)malloc(sizeof(ubyte)*imageSize);
-	padding = (ubyte*)malloc(sizeof(ubyte)*imageSize+padding_size);
+//	padding = (ubyte*)malloc(sizeof(ubyte)*imageSize+padding_size);
     fread(inimg, sizeof(ubyte), imageSize+padding_size, fp); 
     
     fclose(fp);

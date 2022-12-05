@@ -17,9 +17,10 @@ int main(int argc, char** argv)
     BITMAPFILEHEADER bmpHeader;             /* BMP FILE INFO */
     BITMAPINFOHEADER bmpInfoHeader;     /* BMP IMAGE INFO */
     RGBQUAD *palrgb;
-    ubyte *inimg, *outimg;
+    ubyte *inimg, *outimg, *padding;
     int x, y, z, imageSize;
 
+	//Bitmap exe file
     if(argc != 3) {
         fprintf(stderr, "usage : %s input.bmp output.bmp\n", argv[0]);
         return -1;
@@ -47,15 +48,18 @@ int main(int argc, char** argv)
     int elemSize = bmpInfoHeader.biBitCount/8;
     int size = bmpInfoHeader.biWidth*elemSize;
     imageSize = size * bmpInfoHeader.biHeight; 
+	int padding_size = (((bmpInfoHeader.biWidth  +  bmpInfoHeader.biHeight + 2) * elemSize) * 2); 
 
     /* 이미지의 해상도(넓이 × 깊이) */
     printf("Resolution : %d x %d\n", bmpInfoHeader.biWidth, bmpInfoHeader.biHeight);
     printf("Bit Count : %d\n", bmpInfoHeader.biBitCount);     /* 픽셀당 비트 수(색상) */
     printf("Image Size : %d\n", imageSize);
+	printf("Padding Size : %d\n", padding_size);
 
-    inimg = (ubyte*)malloc(sizeof(ubyte)*imageSize); 
+    inimg = (ubyte*)malloc(sizeof(ubyte)*imageSize+padding_size); 
     outimg = (ubyte*)malloc(sizeof(ubyte)*imageSize);
-    fread(inimg, sizeof(ubyte), imageSize, fp); 
+	padding = (ubyte*)malloc(sizeof(ubyte)*imageSize+padding_size);
+    fread(inimg, sizeof(ubyte), imageSize+padding_size, fp); 
     
     fclose(fp);
 
@@ -64,8 +68,8 @@ int main(int argc, char** argv)
                            {1/9.0, 1/9.0, 1/9.0},
                            {1/9.0, 1/9.0, 1/9.0} };
     memset(outimg, 0, sizeof(ubyte)*imageSize);
-    for(y = 1; y < bmpInfoHeader.biHeight - 1; y++) { 
-        for(x = 1; x < (bmpInfoHeader.biWidth - 1) * elemSize; x+=elemSize) {
+    for(y = 0; y < bmpInfoHeader.biHeight+1; y++) { 
+        for(x = 0; x < (bmpInfoHeader.biWidth+1) * elemSize; x+=elemSize) {
             for(z = 0; z < elemSize; z++) {
                 float sum = 0.0;
                 for(int i = -1; i < 2; i++) {
@@ -97,6 +101,7 @@ int main(int argc, char** argv)
     
     free(inimg); 
     free(outimg);
+	free(padding);
     
     return 0;
 }
