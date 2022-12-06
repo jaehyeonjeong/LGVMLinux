@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "bmpHeader.h"
+#include "MyBmpHeader.h"
 
 #define BYTE	unsigned char
 #define BASE    16
