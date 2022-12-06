@@ -3,7 +3,6 @@
 #include <string.h>
 #include <limits.h>                     /* USHRT_MAX 상수를 위해서 사용한다. */
 #include <unistd.h>
-#include <math.h>
 
 #include "bmpHeader.h"
 
@@ -18,9 +17,9 @@ int main(int argc, char** argv)
     BITMAPFILEHEADER bmpHeader;             /* BMP FILE INFO */
     BITMAPINFOHEADER bmpInfoHeader;     /* BMP IMAGE INFO */
     RGBQUAD *palrgb;
-    ubyte *inimg, *padimg, *outimg, *grayimg;
+    ubyte *inimg, *padimg, *outimg *midimg;
     int x, y, z, imageSize;
-    int i, j, index;
+
     if(argc != 3) {
         fprintf(stderr, "usage : %s input.bmp output.bmp\n", argv[0]);
         return -1;
@@ -55,22 +54,10 @@ int main(int argc, char** argv)
     printf("Image Size : %d\n", imageSize);
 
     inimg = (ubyte*)malloc(sizeof(ubyte)*imageSize);
-    grayimg = (ubyte*)malloc(sizeof(ubyte)*imageSize);
+    midimg = (ubyte*)malloc(sizeof(ubyte)*imageSize);
     outimg = (ubyte*)malloc(sizeof(ubyte)*imageSize);
     fread(inimg, sizeof(ubyte), imageSize, fp); 
     fclose(fp);
-    ubyte r, g, b, gray;
-    //grayscale img
-    for(y = 0; y < bmpInfoHeader.biHeight; y++){
-            for(x = 0; x < size; x+=elemSize){
-                b = inimg[x+y*size+0];
-                g = inimg[x+y*size+1];
-                r = inimg[x+y*size+2];
-                grayimg[x+y*size+0]=grayimg[x+y*size+1]=
-                        grayimg[x+y*size+2]=((66*r+129*g+25*b+128)>>8)+16;
-            }
-    }
-
 
     int padSize = (bmpInfoHeader.biWidth + 2) * elemSize;
     int addSize = (padSize + bmpInfoHeader.biHeight)*2;
@@ -83,55 +70,49 @@ int main(int argc, char** argv)
         for(x = 0; x < bmpInfoHeader.biWidth * elemSize; x+=elemSize) {
             for(z = 0; z < elemSize; z++) {
                 //outimg[(x+elemSize)+(y+1)*size+z]=inimg[x+y*size+z];
-                padimg[(x+elemSize)+(y+1)*padSize+z]=grayimg[x+y*size+z];
+                padimg[(x+elemSize)+(y+1)*padSize+z]=inimg[x+y*size+z];
             }
         }
     }
     //2 height lines
     for(y = 0; y < bmpInfoHeader.biHeight; y++) { 
         for(z = 0; z < elemSize; z++) {
-            padimg[0+(y+1)*padSize+z]=grayimg[0+y*size+z];
-            padimg[padSize-elemSize+(y+1)*padSize+z]=grayimg[size-elemSize+y*size+z];
+            padimg[0+(y+1)*padSize+z]=inimg[0+y*size+z];
+            padimg[padSize-elemSize+(y+1)*padSize+z]=inimg[size-elemSize+y*size+z];
         }
     }
     //2 width lines
     for(x = 0; x < bmpInfoHeader.biWidth*elemSize; x++) { 
-        padimg[elemSize+x]=grayimg[x];
-        padimg[elemSize+x+(bmpInfoHeader.biHeight)*padSize]=grayimg[x+(bmpInfoHeader.biHeight-1)*size];
+        padimg[elemSize+x]=inimg[x];
+        padimg[elemSize+x+(bmpInfoHeader.biHeight)*padSize]=inimg[x+(bmpInfoHeader.biHeight-1)*size];
     }
     //4 edge points
     for(z = 0; z < elemSize; z++) {
-       padimg[z]=grayimg[z];
-       padimg[padSize-elemSize+z]=grayimg[size-elemSize+z];
-       padimg[(bmpInfoHeader.biHeight+1)*padSize+z]=grayimg[(bmpInfoHeader.biHeight-1)*size+z];
-       padimg[(bmpInfoHeader.biHeight+1)*padSize+padSize-elemSize+z]=grayimg[(bmpInfoHeader.biHeight-1)*size+size-elemSize+z];
+       padimg[z]=inimg[z];
+       padimg[padSize-elemSize+z]=inimg[size-elemSize+z];
+       padimg[(bmpInfoHeader.biHeight+1)*padSize+z]=inimg[(bmpInfoHeader.biHeight-1)*size+z];
+       padimg[(bmpInfoHeader.biHeight+1)*padSize+padSize-elemSize+z]=inimg[(bmpInfoHeader.biHeight-1)*size+size-elemSize+z];
     }
-                    
+
     // define the kernel
-    float xkernel[3][3] = { {-1, 0, 1},
+    float kernel[3][3] = { {-1, 0, 1},
                            {-2, 0, 2},
                            {-1, 0, 1} };
-
-    float ykernel[3][3] = { {-1, -2, -1},
-                            {0, 0, 0},
-                            {1, 2, 1}};
-
 
     memset(outimg, 0, sizeof(ubyte)*imageSize);
     for(y = 1; y < bmpInfoHeader.biHeight + 1; y++) { 
         for(x = elemSize; x < padSize; x+=elemSize) {
             for(z = 0; z < elemSize; z++) {
-                float xVal = 0.0, yVal = 0.0;
+                float sum = 0.0;
                 for(int i = -1; i < 2; i++) {
                     for(int j = -1; j < 2; j++) {
-                        xVal += xkernel[i+1][j+1]*padimg[(x+i*elemSize)+(y+j)*padSize+z];
-                        yVal += ykernel[i+1][j+1]*padimg[(x+i*elemSize)+(y+i)*padSize+z];
+                        sum += kernel[i+1][j+1]*padimg[(x+i*elemSize)+(y+j)*padSize+z];
                     }
                 }
-                outimg[(x-elemSize)+(y-1)*size+z] = LIMIT_UBYTE(sqrt(xVal*xVal+yVal*yVal));
+                outimg[(x-elemSize)+(y-1)*size+z] = LIMIT_UBYTE(sum);
             }
         }
-    }        
+    }         
      
     /***** write bmp *****/ 
     if((fp=fopen(argv[2], "wb"))==NULL) { 
@@ -154,7 +135,6 @@ int main(int argc, char** argv)
     free(inimg); 
     free(outimg);
     free(padimg);
-    free(grayimg);
-
+    
     return 0;
 }

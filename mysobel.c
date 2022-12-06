@@ -1,160 +1,153 @@
-#include <stdio.h> 
-#include <stdlib.h> 
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <limits.h>                     /* USHRT_MAX 상수를 위해서 사용한다. */
+#include <limits.h>
 #include <unistd.h>
 #include <math.h>
 
-#include "bmpHeader.h"
+#include "MyBmpHeader.h"
 
-/* 이미지 데이터의 경계 검사를 위한 매크로 */
 #define LIMIT_UBYTE(n) ((n)>UCHAR_MAX)?UCHAR_MAX:((n)<0)?0:(n)
 
 typedef unsigned char ubyte;
 
-int main(int argc, char** argv) 
+int main(int argc, char **argv)
 {
-    FILE* fp; 
-    BITMAPFILEHEADER bmpHeader;             /* BMP FILE INFO */
-    BITMAPINFOHEADER bmpInfoHeader;     /* BMP IMAGE INFO */
-    RGBQUAD *palrgb;
-    ubyte *inimg, *padimg, *outimg, *grayimg;
-    int x, y, z, imageSize;
-    int i, j, index;
-    if(argc != 3) {
-        fprintf(stderr, "usage : %s input.bmp output.bmp\n", argv[0]);
-        return -1;
-    }
-    
-    /***** read bmp *****/ 
-    if((fp=fopen(argv[1], "rb")) == NULL) { 
-        fprintf(stderr, "Error : Failed to open file...₩n"); 
-        return -1;
-    }
+        FILE *fp;
+        BITMAPFILEHEADER bmpHeader;
+        BITMAPINFOHEADER bmpInfoHeader;
+        RGBQUAD *palrgb;
+        ubyte *inimg, *grayimg, *padimg, *outimg;
+        int x, y, z, imageWidth, imageSize, graySize;
 
-    /* BITMAPFILEHEADER 구조체의 데이터 */
-    fread(&bmpHeader, sizeof(BITMAPFILEHEADER), 1, fp);
+        if(argc != 3){
+                fprintf(stderr, "usage : %s input.bmp output.bmp\n", argv[0]);
+                return -1;
+        }
+        
+        if((fp=fopen(argv[1], "rb"))==NULL){
+                fprintf(stderr, "Error : Failed to open file...\n");
+                return -1;
+        }
 
-    /* BITMAPINFOHEADER 구조체의 데이터 */
-    fread(&bmpInfoHeader, sizeof(BITMAPINFOHEADER), 1, fp);
+        fread(&bmpHeader, sizeof(BITMAPFILEHEADER), 1, fp);
 
-    /* 트루 컬러를 지원하면 변환할 수 없다. */
-    if(bmpInfoHeader.biBitCount != 24) {
-        perror("This image file doesn't supports 24bit color\n");
+        fread(&bmpInfoHeader, sizeof(BITMAPINFOHEADER), 1, fp);
+
+        if(bmpInfoHeader.biBitCount != 24){
+                perror("This image file doesn't supports 24bit color\n");
+                fclose(fp);
+                return -1;
+        }
+
+        imageWidth = bmpInfoHeader.biWidth;
+        int elemSize = bmpInfoHeader.biBitCount/8;
+        int size = imageWidth * elemSize;
+        imageSize = size*bmpInfoHeader.biHeight;
+
+        inimg = (ubyte*)malloc(sizeof(ubyte)*imageSize);
+        fread(inimg, sizeof(ubyte), imageSize, fp);
         fclose(fp);
-        return -1;
-    }
-    
-    int elemSize = bmpInfoHeader.biBitCount/8;
-    int size = bmpInfoHeader.biWidth*elemSize; //strider 1 line
-    imageSize = size * bmpInfoHeader.biHeight; 
 
-    /* 이미지의 해상도(넓이 × 깊이) */
-    printf("Resolution : %d x %d\n", bmpInfoHeader.biWidth, bmpInfoHeader.biHeight);
-    printf("Bit Count : %d\n", bmpInfoHeader.biBitCount);     /* 픽셀당 비트 수(색상) */
-    printf("Image Size : %d\n", imageSize);
-
-    inimg = (ubyte*)malloc(sizeof(ubyte)*imageSize);
-    grayimg = (ubyte*)malloc(sizeof(ubyte)*imageSize);
-    outimg = (ubyte*)malloc(sizeof(ubyte)*imageSize);
-    fread(inimg, sizeof(ubyte), imageSize, fp); 
-    fclose(fp);
-    ubyte r, g, b, gray;
-    //grayscale img
-    for(y = 0; y < bmpInfoHeader.biHeight; y++){
-            for(x = 0; x < size; x+=elemSize){
-                b = inimg[x+y*size+0];
-                g = inimg[x+y*size+1];
-                r = inimg[x+y*size+2];
-                grayimg[x+y*size+0]=grayimg[x+y*size+1]=
-                        grayimg[x+y*size+2]=((66*r+129*g+25*b+128)>>8)+16;
-            }
-    }
-
-
-    int padSize = (bmpInfoHeader.biWidth + 2) * elemSize;
-    int addSize = (padSize + bmpInfoHeader.biHeight)*2;
-    padimg = (ubyte*)malloc(sizeof(ubyte)*(imageSize + addSize));
-
-    /* make padding image */
-    memset(padimg, 0, (sizeof(ubyte)*imageSize + addSize));
-    //memset(outimg, 0, sizeof(ubyte)*imageSize);
-    for(y = 0; y < bmpInfoHeader.biHeight; y++) {
-        for(x = 0; x < bmpInfoHeader.biWidth * elemSize; x+=elemSize) {
-            for(z = 0; z < elemSize; z++) {
-                //outimg[(x+elemSize)+(y+1)*size+z]=inimg[x+y*size+z];
-                padimg[(x+elemSize)+(y+1)*padSize+z]=grayimg[x+y*size+z];
-            }
-        }
-    }
-    //2 height lines
-    for(y = 0; y < bmpInfoHeader.biHeight; y++) { 
-        for(z = 0; z < elemSize; z++) {
-            padimg[0+(y+1)*padSize+z]=grayimg[0+y*size+z];
-            padimg[padSize-elemSize+(y+1)*padSize+z]=grayimg[size-elemSize+y*size+z];
-        }
-    }
-    //2 width lines
-    for(x = 0; x < bmpInfoHeader.biWidth*elemSize; x++) { 
-        padimg[elemSize+x]=grayimg[x];
-        padimg[elemSize+x+(bmpInfoHeader.biHeight)*padSize]=grayimg[x+(bmpInfoHeader.biHeight-1)*size];
-    }
-    //4 edge points
-    for(z = 0; z < elemSize; z++) {
-       padimg[z]=grayimg[z];
-       padimg[padSize-elemSize+z]=grayimg[size-elemSize+z];
-       padimg[(bmpInfoHeader.biHeight+1)*padSize+z]=grayimg[(bmpInfoHeader.biHeight-1)*size+z];
-       padimg[(bmpInfoHeader.biHeight+1)*padSize+padSize-elemSize+z]=grayimg[(bmpInfoHeader.biHeight-1)*size+size-elemSize+z];
-    }
-                    
-    // define the kernel
-    float xkernel[3][3] = { {-1, 0, 1},
-                           {-2, 0, 2},
-                           {-1, 0, 1} };
-
-    float ykernel[3][3] = { {-1, -2, -1},
-                            {0, 0, 0},
-                            {1, 2, 1}};
-
-
-    memset(outimg, 0, sizeof(ubyte)*imageSize);
-    for(y = 1; y < bmpInfoHeader.biHeight + 1; y++) { 
-        for(x = elemSize; x < padSize; x+=elemSize) {
-            for(z = 0; z < elemSize; z++) {
-                float xVal = 0.0, yVal = 0.0;
-                for(int i = -1; i < 2; i++) {
-                    for(int j = -1; j < 2; j++) {
-                        xVal += xkernel[i+1][j+1]*padimg[(x+i*elemSize)+(y+j)*padSize+z];
-                        yVal += ykernel[i+1][j+1]*padimg[(x+i*elemSize)+(y+i)*padSize+z];
-                    }
+        graySize = sizeof(ubyte)*imageWidth*bmpInfoHeader.biHeight;
+        grayimg = (ubyte*)malloc(sizeof(ubyte)*graySize);
+        for(y = 0; y < bmpInfoHeader.biHeight; y++){
+                for(x = 0; x < size; x += elemSize){
+                        ubyte b = inimg[x+y*size+0];
+                        ubyte g = inimg[x+y*size+1];
+                        ubyte r = inimg[x+y*size+2];
+                        grayimg[x/elemSize+y*imageWidth]=((66*r+129*g+25*b+128)>>8)+16;
                 }
-                outimg[(x-elemSize)+(y-1)*size+z] = LIMIT_UBYTE(sqrt(xVal*xVal+yVal*yVal));
-            }
         }
-    }        
-     
-    /***** write bmp *****/ 
-    if((fp=fopen(argv[2], "wb"))==NULL) { 
-        fprintf(stderr, "Error : Failed to open file...₩n"); 
-        return -1;
-    }
 
-    /* BITMAPFILEHEADER 구조체의 데이터 */
-    fwrite(&bmpHeader, sizeof(BITMAPFILEHEADER), 1, fp);
+        int padSize = (imageWidth + 2);
+        int addSize = (padSize + bmpInfoHeader.biHeight)*2;
+        padimg = (ubyte*)malloc(sizeof(ubyte)*(graySize + addSize));
+        memset(padimg, 0, (sizeof(ubyte)*graySize + addSize));
 
-    /* BITMAPINFOHEADER 구조체의 데이터 */
-    fwrite(&bmpInfoHeader, sizeof(BITMAPINFOHEADER), 1, fp);
+        for(y = 0; y < bmpInfoHeader.biHeight; y++){
+                for(x = 0; x < imageWidth; x++){
+                        padimg[(x+1)+(y+1)*padSize]=grayimg[x+y*imageWidth];
+                }
+        }
 
-    //fwrite(inimg, sizeof(ubyte), imageSize, fp); 
-    //fwrite(padimg, sizeof(ubyte), imageSize, fp);
-    fwrite(outimg, sizeof(ubyte), imageSize, fp);
+        for(x = 0; x < bmpInfoHeader.biHeight; x++){
+                padimg[(x+1)*padSize]=grayimg[x*imageWidth];
+                padimg[padSize-1+(x+1)*padSize]=grayimg[imageWidth-1+x*imageWidth];
+        }
 
-    fclose(fp); 
+        for(x = 0; x < imageWidth+2; x++){
+                padimg[x]=grayimg[x];
+                padimg[x+(bmpInfoHeader.biHeight+1)*padSize]=grayimg[x+(bmpInfoHeader.biHeight-1)*imageWidth];
+        }
 
-    free(inimg); 
-    free(outimg);
-    free(padimg);
-    free(grayimg);
+        padimg[padSize-1]=grayimg[imageWidth-1];
+        padimg[(bmpInfoHeader.biHeight+1)*padSize]=grayimg[(bmpInfoHeader.biHeight-1)*imageWidth];
+        padimg[(bmpInfoHeader.biHeight+1)*padSize+padSize-1]=grayimg[(bmpInfoHeader.biHeight-1)*imageWidth+imageWidth-1];
+        
 
-    return 0;
+        float xKernel[3][3] = { {-1, 0, 1},
+                                {-2, 0, 2},
+                                {-1, 0, 1} };
+
+        float yKernel[3][3] = { {1, 2, 1},
+                                {0, 0, 0},
+                                {-1, -2, -1} };
+
+        outimg = (ubyte*)malloc(sizeof(ubyte)*graySize);
+        memset(outimg, 0, sizeof(ubyte)*graySize);
+        for(y = 1; y < bmpInfoHeader.biHeight + 1; y++){
+                for(x = 1; x < padSize; x++){
+                        float xVal = 0.0, yVal = 0.0;
+                        for(int i = -1; i < 2; i++){
+                                for(int j = -1; j < 2; j++){
+                                        xVal += xKernel[i+1][j+1]*padimg[(x+i)+(y+j)*padSize];
+                                        yVal += yKernel[i+1][j+1]*padimg[(x+i)+(y+j)*padSize];
+                                }
+                        }
+                        outimg[(x-1)+(y-1)*imageWidth] = LIMIT_UBYTE(sqrt(xVal*xVal+yVal*yVal));
+                }
+        }
+        palrgb = (RGBQUAD*)malloc(sizeof(RGBQUAD)*256);
+        for(x = 0; x < 256; x++){
+                palrgb[x].rgbBlue = palrgb[x].rgbGreen = 
+                        palrgb[x].rgbRed = x;
+                palrgb[x].rgbReserved = 0;
+        }
+
+        bmpInfoHeader.biBitCount = 8;
+        bmpInfoHeader.SizeImage = imageWidth*bmpInfoHeader.biHeight;
+        bmpInfoHeader.biCompression = 0;
+        bmpInfoHeader.biClrUsed = 0;
+        bmpInfoHeader.biClrImportant = 0;
+
+        bmpHeader.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) +
+                sizeof(RGBQUAD) * 256;
+        bmpHeader.bfSize = bmpHeader.bfOffBits + bmpInfoHeader.SizeImage;
+
+        if((fp=fopen(argv[2], "wb"))==NULL){
+                fprintf(stderr, "Error : Failed to open file...\n");
+                return -1;
+        }
+
+        fwrite(&bmpHeader, sizeof(BITMAPFILEHEADER), 1, fp);
+
+        fwrite(&bmpInfoHeader, sizeof(BITMAPINFOHEADER), 1, fp);
+
+        fwrite(palrgb, sizeof(RGBQUAD), 256, fp);
+
+        fwrite(outimg, sizeof(ubyte), graySize, fp);
+
+        fclose(fp);
+
+        free(inimg);
+        free(grayimg);
+        free(padimg);
+        free(outimg);
+
+        return 0;
 }
+
+
+
+
