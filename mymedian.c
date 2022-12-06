@@ -40,13 +40,13 @@ int main(int argc, char** argv)
     int x, y;
     srand((unsigned int)time(NULL)); 	// seed값으로 현재시간 부여
 
-    if(argc != 4) {
+    if(argc != 3) {
         fprintf(stderr, "usage : %s count input.bmp output.bmp\n", argv[0]);
         return -1;
     }
     
     /***** read bmp *****/ 
-    if((fp=fopen(argv[2], "rb")) == NULL) { 
+    if((fp=fopen(argv[1], "rb")) == NULL) { 
         fprintf(stderr, "Error : Failed to open file...₩n"); 
         return -1;
     }
@@ -111,15 +111,6 @@ int main(int argc, char** argv)
         padimg[(bmpInfoHeader.biHeight+1)*padSize+padSize-elemSize+z]=inimg[(bmpInfoHeader.biHeight-1)*size+size-elemSize+z];
      }
 
-    cnt = atoi(argv[1]);
-    for(i = 0; i < cnt; i++) { 
-        int pos = rand( ) % (bmpInfoHeader.biWidth * bmpInfoHeader.biHeight);
-        int value = rand( ) & 0b11111111;
-        for(z = 0; z < elemSize; z++) {
-            int tmp = inimg[pos*elemSize+z] + value;
-            inimg[pos*elemSize+z] = LIMIT_UBYTE(tmp);
-        }
-     }         
     // define the kernel
     int kernel[9] = {0,};
     int kernel_start = 0;
@@ -128,10 +119,9 @@ int main(int argc, char** argv)
          for(x = elemSize; x < padSize; x+=elemSize) {
              for(z = 0; z < elemSize; z++) {
                  for(int j = -1; j < 2; j++) {
-                     for(int i = -1 ; i < 2; i++)
+                     for(int i = -1 ; i < 2; i++, kernel_start++)
                      {
                         kernel[kernel_start] = padimg[(x+i*elemSize)+(y+j)*padSize+z];
-                        kernel_start++;
                      }
                  }
                  kernel_start = 0;
@@ -143,7 +133,7 @@ int main(int argc, char** argv)
 
 
     /***** write bmp *****/ 
-    if((fp=fopen(argv[3], "wb"))==NULL) { 
+    if((fp=fopen(argv[2], "wb"))==NULL) { 
         fprintf(stderr, "Error : Failed to open file...₩n"); 
         return -1;
     }
@@ -151,7 +141,7 @@ int main(int argc, char** argv)
     /* BITMAPFILEHEADER 구조체의 데이터 */
     fwrite(&bmpHeader, sizeof(BITMAPFILEHEADER), 1, fp);
 
-    /* BITMAPINFOHEADER 구조체의 데이터 */
+    /* BITMAPINFOHEADER& 0b1111111 구조체의 데이터 */
     fwrite(&bmpInfoHeader, sizeof(BITMAPINFOHEADER), 1, fp);
 
     fwrite(inimg, sizeof(unsigned char), imageSize, fp);
