@@ -2,7 +2,7 @@
 #include <stdlib.h> 
 #include <string.h>
 #include <limits.h>                     /* USHRT_MAX 상수를 위해서 사용한다. */
-#include "bmpHeader.h"
+#include "MyBmpHeader.h"
 
 #define widthBytes(bits) (((bits)+31)/32*4)
 
@@ -57,11 +57,6 @@ int main(int argc, char** argv)
 			bmpInfoHeader.biClrUsed = 256;
     palrgb = (RGBQUAD*)malloc(sizeof(RGBQUAD)*bmpInfoHeader.biClrUsed);
     fread(palrgb, sizeof(RGBQUAD), bmpInfoHeader.biClrUsed, fp); 
-
-    for(int i = 0; i < bmpInfoHeader.biClrUsed; i++) 
-        printf("%d : %x %x %x %x\n", i, palrgb[i].rgbRed, palrgb[i].rgbGreen, 
-                              palrgb[i].rgbRed, palrgb[i].rgbReserved);
-    //printf("%d %d\n", sizeof(BITMAPFILEHEADER), sizeof(BITMAPINFOHEADER));
 
     inimg = (ubyte*)malloc(sizeof(ubyte)*bmpInfoHeader.SizeImage ); 
     outimg = (ubyte*)malloc(sizeof(ubyte)*(bmpInfoHeader.biWidth*bmpInfoHeader.biHeight*3));
