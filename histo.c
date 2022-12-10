@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "bmpHeader3.h"
+#include "bmpHeader.h"
 
 #define BYTE	unsigned char
 #define BASE    16
@@ -58,6 +58,7 @@ printf("Image width : %d, height : %d(%d)\n", bmpInfoHeader.biWidth, bmpInfoHead
 			g = (float)inimg[index+3*j+1];
 			b = (float)inimg[index+3*j+0];
 			//그레이 스케일로 변환하는 공식
+			printf("(%f, %f, %f)\n", b, g, r);
 			gray = (r*0.3F)+(g*0.65F)+(b*0.25F);
 			histogram[(unsigned char)(gray)] += 1;
 			outimg[index+3*j] = outimg[index+3*j+1] = outimg[index+3*j+2] = gray;
@@ -70,7 +71,7 @@ printf("Image width : %d, height : %d(%d)\n", bmpInfoHeader.biWidth, bmpInfoHead
 		   printf("*");
 		else for(j = 0; j < (int)(histogram[i]/bmpInfoHeader.biHeight); j++)
 		   printf("*");
-		printf("  %d\n", histogram[i]);
+		printf("  %ld\n", histogram[i]);
     };
 	
 	bmpFileHeader.bfOffBits += 256*sizeof(RGBQUAD); 

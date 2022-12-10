@@ -55,7 +55,7 @@ int main(int argc, char** argv)
     printf("Bit Count : %d\n", bmpInfoHeader.biBitCount);     /* 픽셀당 비트 수(색상) */
     printf("Image Size : %d\n", imageSize);
 	printf("Padding Size : %d\n", padding_size);
-
+	printf("(%d, %d, %d)\n", palrgb->rgbRed, palrgb->rgbGreen, palrgb->rgbRed);
     inimg = (ubyte*)malloc(sizeof(ubyte)*imageSize+padding_size); 
     outimg = (ubyte*)malloc(sizeof(ubyte)*imageSize);
 //	padding = (ubyte*)malloc(sizeof(ubyte)*imageSize+padding_size);
