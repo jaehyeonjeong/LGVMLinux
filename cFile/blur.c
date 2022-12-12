@@ -74,13 +74,26 @@ int main(int argc, char** argv)
                 float sum = 0.0;
                 for(int i = -1; i < 2; i++) {
                     for(int j = -1; j < 2; j++) {
-                        sum += kernel[i+1][j+1]*inimg[(x-i*elemSize)+(y-j)*size+z];
+                        sum += kernel[i+1][j+1]*inimg[(x+i*elemSize)+(y+j)*size+z];
                     }
                 }
                 outimg[x+y*size+z] = sum;
             }
         }
     }         
+	for(y = 0; y < 1; y++){
+          for(x = 0; x < 3; x+=3){
+              for(z = 0; z < elemSize; z++){
+                  float sum = 0.0;
+                  for(int i = -1; i < 2; i++){
+                      for(int j = -1; j < 2; j++){
+                          sum += kernel[i+1][j+1]*inimg[(x-i*elemSize)+(y-j)*size+z];
+                          printf("%d : kernel[%d][%d] = %lf\n",z ,i+1, j+1, sum);
+                      }
+                  }
+              }
+          }
+      }
      
     /***** write bmp *****/ 
     if((fp=fopen(argv[2], "wb"))==NULL) { 

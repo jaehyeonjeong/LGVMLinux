@@ -3,7 +3,7 @@
 #include <string.h>
 #include "bmpHeader.h"  //숙제 조건중 bmpHeader.h 헤더만 사용하기위해 포함시킴 
 
-#define widthbytes(bits)  (((bits)+31)/32*4) //byte의 넓이 세분화
+#define widthbytes(bits)  (((bits)+31)/32*4) //넓이를 4의 배수로 맞춰주기 위한 패딩
 
 typedef unsigned char BYTE; //타입 재정의를 사용해 BTYE변수를 unsigned char로 재정의		
 

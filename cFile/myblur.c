@@ -81,6 +81,20 @@ int main(int argc, char** argv)
             }
         }
     }         
+
+    /*for(y = 0; y < 1; y++){
+    	for(x = 0; x < 3; x+=3){
+    		for(z = 0; z < 3; z++){
+    			float sum = 0.0;
+    			for(int i = -1; i < 2; i++){
+    				for(int j = -1; j < 2; j++){
+    					sum += kernel[i+1][j+1]*inimg[(x-i*elemSize)+(y-j)*size+z];
+    					printf("kernel[%d][%d] = %lf\n", i+1, j+1, sum);
+					}
+				}
+			}
+		}
+	}*/
      
     /***** write bmp *****/ 
     if((fp=fopen(argv[2], "wb"))==NULL) { 

@@ -10,7 +10,7 @@ int main()
 	v1.push_back(Point(50, 60));
 
 	vector<float> v2(3, 9.25);
-	Size arr_size[] a= {Size(2, 2), Size(3, 3), Size(4, 4)};
+	Size arr_size[] = {Size(2, 2), Size(3, 3), Size(4, 4)};
 	int arr_int[] = {10, 20, 30, 40, 50};
 
 	vector<Size> v3(arr_size, arr_size + sizeof(arr_size) / sizeof(Size));
