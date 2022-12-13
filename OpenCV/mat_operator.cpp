@@ -21,6 +21,16 @@
      cout << "[m2(전치행렬)] = " << endl << m2_t << endl;
     
      cout << "연립방정식의 해 x1, x2, x3 =" << x.t() << endl << endl;
-     return 0;
+	
+	 Matx<uchar, 2, 2> m3;
+	 
+	 m3(0, 0) = -50;
+	 m3(0, 1) = 300;
+	 m3(1, 0) = saturate_cast<uchar>(-50);
+	 m3(1, 1) = saturate_cast<uchar>(300);
+
+	 cout << "[m3] = " << endl << m3 << endl;
+
+	return 0;
  }   
 
