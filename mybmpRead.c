@@ -10,7 +10,7 @@ int main(int argc, char** argv)
 	FILE *fp, *copyfp;		//불러오는 파일의 변수, 복사된 파일
 	BITMAPFILEHEADER bmpFileHeader; //파일 헤더 구조체 변수 정의
 	BITMAPINFOHEADER bmpInfoHeader;	//파일 정보 구조체 변수 정의
-	RGBQUAD palrgb[256];			//팔레트 구조체 변수 정의, 구조체 인자 마다 [0~255] 배열 선언 
+	RGBQUAD *palrgb;			//팔레트 구조체 변수 정의, 구조체 인자 마다 [0~255] 배열 선언 
 
 	int r, g, b;	//픽셀 r, g, b원소 정의
 	u_int imagesize;   //이미지 크기 변수 선언
@@ -39,7 +39,11 @@ int main(int argc, char** argv)
 
 	imagesize = bmpInfoHeader.SizeImage;		//입력된 비트맵의 이미지 크기
 	if(!imagesize) imagesize = bmpInfoHeader.biHeight * size;	//만일 이미지의 크기가 없으면 크기 정의
+	
 	inimg = (BYTE*)malloc(sizeof(BYTE)*imagesize);	//입력된 이미지 동적 할당
+	palrgb = (RGBQUAD*)malloc(sizeof(RGBQUAD)*256);	//팔레트 256개 추가
+	
+	memset(palrgb, 0, sizeof(RGBQUAD)*256);			//팔레트 할당 정보 초기화
 	fread(inimg, sizeof(BYTE), imagesize, fp);	//입력된 이미지 읽기
     fclose(fp); 
 	for(i = 0; i < bmpInfoHeader.biHeight; i++) {	//비트맵의 높이 
@@ -58,23 +62,18 @@ int main(int argc, char** argv)
 		return -1;
 	}
 	/*원본 파일에서 파일 내용을 읽어서 복사할 파일에 쓴다*/
-#if 0
-	bmpInfoHeader.biBitCount = 32;
-    bmpInfoHeader.SizeImage = bmpInfoHeader.biWidth*bmpInfoHeader.biHeight*bmpInfoHeader.biBitCount/8;
-    bmpInfoHeader.biCompression = 0;
-    bmpInfoHeader.biClrUsed = 0;
-    bmpInfoHeader.biClrImportant = 0;
-	
-	palrgb->rgbReserved = 255;
-
-	bmpFileHeader.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)+sizeof(RGBQUAD)*256;
-	bmpFileHeader.bfSize = bmpFileHeader.bfOffBits + bmpInfoHeader.SizeImage;
+#if 1
+	/*RGB 팔렛트 추가*/	
+	bmpFileHeader.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)+sizeof(RGBQUAD) * 256;
+	bmpFileHeader.bfSize = bmpFileHeader.bfOffBits + bmpInfoHeader.SizeImage;	//버퍼 크기는 RGBQUAD만 추가한 이미지 크기
 #endif
-	fwrite(&bmpFileHeader, sizeof(BITMAPFILEHEADER), 1, copyfp);
-	fwrite(&bmpInfoHeader, sizeof(BITMAPINFOHEADER), 1, copyfp);
-	fwrite(inimg, sizeof(BYTE), imagesize, copyfp);
-	fclose(copyfp);
-	free(inimg); //입력 이미지 동적 할당 해제
+	fwrite(&bmpFileHeader, sizeof(BITMAPFILEHEADER), 1, copyfp); //복사파일에 BITMAPFILEHEADER 구조체 추가
+	fwrite(&bmpInfoHeader, sizeof(BITMAPINFOHEADER), 1, copyfp); //복사파일에 BITMAPINFOHEADER 구조체 추가
+	fwrite(palrgb, sizeof(RGBQUAD), 256, copyfp);				 //복사파일에 RGBQUAD 256만큼 구조체 추가 
+	fwrite(inimg, sizeof(BYTE), imagesize, copyfp);				//복사파일을 이미지 사이즈 호출
+	fclose(copyfp);		//copyfp 파일 닫기
+	free(inimg);	//입력 이미지 동적 할당 해제
+	free(palrgb);	//팔레트 정보 동적 할당 해제
 	
     return 0;
 }
