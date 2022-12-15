@@ -15,6 +15,7 @@ int main()
 	imshow("image", image);
 	imshow("dst1-대비감소", dst1), imshow("dst2-대비증가", dst2);
 	imshow("dst3-평균이용 대비감소", dst3), imshow("dst4-평균이용 대비증가", dst4);
+
 	waitKey();
 	return 0;
 }
