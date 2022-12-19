@@ -82,10 +82,10 @@ int main()
 	for (int i = 0; i < 10; i++) {
 		for (int j = 0; j < 6; j++)
 		{
-			string demo_file = 	format("../Images/num/%0d.png-%02d.png", i, j);
+			string demo_file = 	format("../Images/num/%d-%02d.png", i, j);
 			Mat  demo_img = imread(demo_file, 0);	// ¿µ»ó ·Îµå
 			if (demo_img.empty()) {
-				cout << demo_file + " ¿ ¿¿¿¿¿." << endl;
+				cout << demo_file + " ÆÄÀÏÀÌ ¾ø½À´Ï´Ù." << endl;
 				continue;
 			}
 
