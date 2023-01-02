@@ -6,7 +6,7 @@ __global__ void kernel()
 
 int main(int argc, char** argv)
 {
-	kernel<<<1,1>>>();
+	kernel<<<2,1>>>();
 
 	printf("Hello CUDA!\n");
 	printf("CUDA error: %s\n", cudaGetErrorString(cudaGetLastError()));
