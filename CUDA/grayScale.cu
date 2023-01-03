@@ -92,8 +92,7 @@ int main(int argc, char** argv)
  const dim3 dimBlock(32, 16);
  
  //execute cuda kernel
- convertToGrey<<<dimGrid, dimBlock>>>(d_inimg, d_outimg, bmpInfoHeader.biHeight, bmpInfoHead
-er.biWidth, elemSize);
+ convertToGrey<<<dimGrid, dimBlock>>>(d_inimg, d_outimg, bmpInfoHeader.biHeight, bmpInfoHeader.biWidth, elemSize);
  //copy computed gray data array from device to host
  cudaMemcpy(outimg, d_outimg, sizeof(ubyte) * graySize, cudaMemcpyDeviceToHost);
  cudaFree(d_outimg);
@@ -114,8 +113,7 @@ er.biWidth, elemSize);
  bmpInfoHeader.biCompression = 0;
  bmpInfoHeader.biClrUsed = 0;
  bmpInfoHeader.biClrImportant = 0;
- bmpHeader.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + sizeof(RGBQU
-AD)*256;
+ bmpHeader.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD)*256;
  bmpHeader.bfSize = bmpHeader.bfOffBits + bmpInfoHeader.SizeImage;
  /* BITMAPFILEHEADER 구조체의 데이터 */
  fwrite(&bmpHeader, sizeof(BITMAPFILEHEADER), 1, fp);
