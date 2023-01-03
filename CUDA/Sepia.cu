@@ -17,13 +17,13 @@ __global__ void convertToGrey(ubyte *rgb, ubyte *out, int rows, int cols, int el
  int grey_offset = row * cols + col;
  int rgb_offset = grey_offset * elemSize;
  
- ubyte r = rgb[rgb_offset + 2];
+ ubyte r = rgb[rgb_offset + 2];		
  ubyte g = rgb[rgb_offset + 1];
  ubyte b = rgb[rgb_offset + 0];
  
- out[grey_offset + 0] = LIMIT_UBYTE(r * 0.272 + g * 0.534 + b * 0.131);
- out[grey_offset + 1] = LIMIT_UBYTE(r * 0.349 + g * 0.686 + b * 0.168);
- out[grey_offset + 2] = LIMIT_UBYTE(r * 0.393 + g * 0.769 + b * 0.189);
+ out[grey_offset + 0] = LIMIT_UBYTE(r * 0.272 + g * 0.534 + b * 0.131);	//b
+ out[grey_offset + 1] = LIMIT_UBYTE(r * 0.349 + g * 0.686 + b * 0.168);	//g
+ out[grey_offset + 2] = LIMIT_UBYTE(r * 0.393 + g * 0.769 + b * 0.189);	//r
 
  }
 }
@@ -90,8 +90,8 @@ int main(int argc, char** argv)
  //copy host rgb data array to device rgb data array
  cudaMemcpy(d_inimg, inimg, sizeof(ubyte) * imageSize, cudaMemcpyHostToDevice);
  //define block and grid dimensions
- const dim3 dimGrid((int)ceil((bmpInfoHeader.biWidth/32)), (int)ceil((bmpInfoHeader.biHeight)/16));
- const dim3 dimBlock(32, 16);
+ const dim3 dimGrid((int)ceil((bmpInfoHeader.biWidth/24)), (int)ceil((bmpInfoHeader.biHeight)/12));
+ const dim3 dimBlock(24, 12);
  
  //execute cuda kernel
  convertToGrey<<<dimGrid, dimBlock>>>(d_inimg, d_outimg, bmpInfoHeader.biHeight, bmpInfoHeader.biWidth, elemSize);
