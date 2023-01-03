@@ -9,7 +9,7 @@
 #define widthbytes(bits) (((bits)+31)/32*4)
 typedef unsigned char ubyte;
 //Cuda kernel for converting RGB image into a GreyScale image
-__global__ void convertToGrey(ubyte *rgb, ubyte *grey, int rows, int cols, int elemSize) {
+__global__ void convertToSepia(ubyte *rgb, ubyte *out, int rows, int cols, int elemSize) {
  int col = threadIdx.x + blockIdx.x * blockDim.x;
  int row = threadIdx.y + blockIdx.y * blockDim.y;
  // Compute for only those threads which map directly to image grid
@@ -20,8 +20,12 @@ __global__ void convertToGrey(ubyte *rgb, ubyte *grey, int rows, int cols, int e
  ubyte r = rgb[rgb_offset + 2];
  ubyte g = rgb[rgb_offset + 1];
  ubyte b = rgb[rgb_offset + 0];
+
+
+ out[grey_offset + 0] = LIMIT_UBYTE(r * 0.272 + g * 0.534 + b * 0.131);
+ out[grey_offset + 1] = LIMIT_UBYTE(r * 0.349 + g * 0.686 + b * 0.168);
+ out[grey_offset + 2] = LIMIT_UBYTE(r * 0.393 + g * 0.769 + b * 0.189);
  
- grey[grey_offset] = r * 0.299f + g * 0.587f + b * 0.114f;
  }
 }
 int main(int argc, char** argv) 
@@ -88,10 +92,10 @@ int main(int argc, char** argv)
  cudaMemcpy(d_inimg, inimg, sizeof(ubyte) * imageSize, cudaMemcpyHostToDevice);
  //define block and grid dimensions
  const dim3 dimGrid((int)ceil((bmpInfoHeader.biWidth/32)), (int)ceil((bmpInfoHeader.biHeight)/16));
- const dim3 dimBlock(24, 12);
+ const dim3 dimBlock(32, 16);
  
  //execute cuda kernel
- convertToGrey<<<dimGrid, dimBlock>>>(d_inimg, d_outimg, bmpInfoHeader.biHeight, bmpInfoHeader.biWidth, elemSize);
+ convertToSepia<<<dimGrid, dimBlock>>>(d_inimg, d_outimg, bmpInfoHeader.biHeight, bmpInfoHeader.biWidth, elemSize);
  //copy computed gray data array from device to host
  cudaMemcpy(outimg, d_outimg, sizeof(ubyte) * graySize, cudaMemcpyDeviceToHost);
  cudaFree(d_outimg);
@@ -102,7 +106,6 @@ int main(int argc, char** argv)
  fprintf(stderr, "Error : Failed to open file...₩n"); 
  return -1;
  }
- palrgb = (RGBQUAD*)malloc(sizeof(RGBQUAD)*256);
  for(int x = 0; x < 256; x++) {
  palrgb[x].rgbBlue = palrgb[x].rgbGreen = palrgb[x].rgbRed = x;
  palrgb[x].rgbReserved = 0;
