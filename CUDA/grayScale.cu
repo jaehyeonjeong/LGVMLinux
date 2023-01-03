@@ -3,7 +3,6 @@
 #include <string.h>
 #include <limits.h> /* USHRT_MAX 상수를 위해서 사용한다. */
 #include <math.h>
-#include <iostream>
 #include "bmpHeader.h"
 /* 이미지 데이터의 경계 검사를 위한 매크로 */
 #define LIMIT_UBYTE(n) ((n)>UCHAR_MAX)?UCHAR_MAX:((n)<0)?0:(n)
